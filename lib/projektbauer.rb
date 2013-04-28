@@ -1,4 +1,3 @@
-#see BernhardsDokumentation.md
 #
 # todo:
 #
@@ -12,24 +11,18 @@
 #     * add user
 #     * specifiy observer, contributors on config file
 #     * update trac permissions accordingly
-# use erb for templates
-# make a gem out of it:
 #
 # projektbauer init
 # projektbuaer updateuser
 # projektbauer add user
 # ...
 #
-
-# mod_dav_fs
-#
-#
-
+# 
 require 'fileutils'
 require 'erb'
 
 class Project
-  attr_accessor  :output_folder,
+  attr_accessor  :output_folder, 
     :server_name,
     :server_root,
     :server_admin,
@@ -55,7 +48,7 @@ class Project
 
 
     @project_name        = nil  # name of project
-    @virtual_host         = nil  # set of the project
+    @virtual_host        = nil  # set of the project
     @project_realm       = nil  # realm for authorization
     @project_admin_user  = nil  # admin - user
     @server_admin        = nil  # email of server admin
@@ -63,17 +56,17 @@ class Project
   end
 
   def init_filenames
-    @_virtual_host_home                   = "#{@server_root}/#{@virtual_host}"
+    @_virtual_host_home_dir               = "#{@server_root}/#{@virtual_host}"
     @_include_virtual_hosts_httpd_conf    = "#{@server_root}/include_virtual_hosts.httpd.conf"
-    @_project_home                        = "#{@_virtual_host_home}/#{@project_name}"
-    @_virtual_host_httpd_conf             = "#{@_virtual_host_home}/virtual_host.httpd.conf"
-    @_virtual_host_locations_httpd_conf   = "#{@_virtual_host_home}/include_locations.httpd.conf"
+    @_project_home                        = "#{@_virtual_host_home_dir}/#{@project_name}"
+    @_virtual_host_httpd_conf             = "#{@_virtual_host_home_dir}/virtual_host.httpd.conf"
+    @_virtual_host_locations_httpd_conf   = "#{@_virtual_host_home_dir}/include_locations.httpd.conf"
     @_project_location_httpd_conf         = "#{@_project_home}/#{@project_name}.httpd.conf"
     @_project_svn_dir                     = "#{@_project_home}/svn"
     @_project_trac_dir                    = "#{@_project_home}/trac"
     @_project_auth_user_file              = "#{@_project_home}/#{@project_realm}.htdigest"
     @_project_svn_authz_file              = "#{@_project_home}/#{@project_name}.dav_svn_authz"
-    @_document_root_dir                   = "#{@_virtual_host_home}/www"
+    @_document_root_dir                   = "#{@_virtual_host_home_dir}/www"
     @_index_html_file                     = "#{@_document_root_dir}/index.html"
   end
 
@@ -128,40 +121,15 @@ class Project
 
 
   def update_virtual_host_locations_httpd_conf
-
-    if File.exists?(@_virtual_host_locations_httpd_conf) then
-      old = File.open(@_virtual_host_locations_httpd_conf).readlines.map{|i| i.strip}
-      new=old.clone
-    else
-      new=[]
-    end
-
-    new << "Include #{@_project_location_httpd_conf}"
-
-    new=new.sort.uniq
-
-    unless old == new then
-      File.open(@_virtual_host_locations_httpd_conf, "w") {|f|
-        f.puts new.join("\n")
-      }
-    end
+    maintain_include_file(@_virtual_host_locations_httpd_conf,
+                          @_project_location_httpd_conf
+                          )
   end
 
   def update_include_virtual_hosts_httpd_conf
-    if File.exists?(@_include_virtual_hosts_httpd_conf) then
-      old = File.open(@_include_virtual_hosts_httpd_conf).readlines.map{|i| i.strip}
-      new=old.clone
-    else
-      new=[]
-    end
-
-    new << "Include #{@_project_location_httpd_conf}"
-
-    unless old == new then
-      File.open(@_include_virtual_hosts_httpd_conf, "w") {|f|
-        f.puts new.join("\n")
-      }
-    end
+    maintain_include_file(@_include_virtual_hosts_httpd_conf,
+                          @_project_location_httpd_conf
+                          )
   end
 
   def create_trac
@@ -218,7 +186,24 @@ class Project
     template.result(binding)
   end
 
+  def maintain_include_file(include_file, entry)
+    if File.exists?(include_file) then
+      old = File.open(include_file).readlines.map{|i| i.strip}
+      new=old.clone
+    else
+      new=[]
+    end
 
+    new << "Include #{entry}"
+
+    new=new.sort.uniq
+
+    unless old == new then
+      File.open(include_file, "w") {|f|
+        f.puts new.join("\n")
+      }
+    end
+  end
 
   def _create_post_commit(file)
   end
