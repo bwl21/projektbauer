@@ -1,0 +1,43 @@
+
+###
+# virtual host for <%= server_name %> non ssl
+#
+# see http://httpd.apache.org/docs/2.2/de/vhosts/name-based.html
+NameVirtualHost <%= @virtual_host_ip %>:<%= @server_port_nossl %>
+<VirtualHost <%= @virtual_host_ip %>:<%= @server_port_nossl %>>
+  ServerName <%= @server_name %>
+  ServerAdmin <%= @server_admin %>
+  DocumentRoot <%= @_document_root_dir %>
+  #CustomLog /home/log/access_log mesos1
+
+  ###
+  # this file contains the locations for <%= server_name %>
+  Include <%= @_virtual_host_locations_httpd_conf %>
+</VirtualHost>
+
+###
+# virtual host for <%= server_name %> ssl
+#
+NameVirtualHost <%= @virtual_host_ip %>:<%= @server_port_ssl %>
+<VirtualHost <%= @virtual_host_ip %>:<%= @server_port_ssl %>>
+  ServerName <%= @server_name %>
+  ServerAdmin <%= @server_admin %>
+  DocumentRoot <%= @_document_root_dir %>
+  #CustomLog /home/log/access_log mesos1
+
+  SSLEngine on
+  #todo make location of certificate configurable
+  SSLCertificateKeyFile /etc/ssl/localcerts/<%= @server_name %>.key
+  SSLCertificateFile /etc/ssl/localcerts/<%= @server_name %>.pem
+  SetEnvIf User-Agent ".*MSIE.*" \
+    nokeepalive ssl-unclean-shutdown \
+    downgrade-1.0 force-response-1.0
+  <Files ~ "\.(cgi|shtml|phtml|php3?)$">
+    SSLOptions +StdEnvVars
+  </Files>
+
+  ###
+  # this file contains the locations for <%= server_name %>
+  Include "<%= @_virtual_host_locations_httpd_conf %>
+
+</VirtualHost>

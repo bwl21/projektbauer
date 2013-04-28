@@ -1,0 +1,31 @@
+DavLockDB "<%= @server_root %>/DavLock"
+#Alias /<%= @virtual_host %>/<%= @project_name %> <%= @server_root %>/<%= @virtual_host %>/<%= @project_name %>/
+ScriptAlias /<%= @project_name %>/trac/ <%= @server_root %>/<%= @virtual_host %>/<%= @project_name %>/trac/cgi-bin/trac.fcgi/
+
+<Location /<%= @project_name %>/svn>
+  DAV svn
+  #todo: investigate usage of parentpath
+  SVNPath <%= @_project_svn_dir %>
+
+  AuthType Digest
+  AuthName "<%= @project_realm %>"
+  AuthDigestDomain /<%= @project_name %>:<%= @server_port_ssl %> /<%= @project_name %>:<%= @server_port_nossl %>
+  AuthDigestProvider file
+  AuthUserFile <%= @_project_auth_user_file %>
+  AuthzSVNAccessFile <%= @_project_svn_authz_file %>
+  <LimitExcept OPTIONS>
+    Require valid-user
+  </LimitExcept>
+</Location>
+
+<Location  /<%= @project_name %>/trac/login>
+  AuthType Digest
+  AuthName "<%= @project_realm %>"
+  AuthDigestDomain /<%= @project_name %>
+  AuthDigestProvider file
+  AuthUserFile <%= @_project_auth_user_file %>
+
+  <LimitExcept OPTIONS>
+    Require valid-user
+  </LimitExcept>
+</Location>

@@ -1,0 +1,11 @@
+### This file is  authorization file for project_02
+# do not remove * = at [/]
+
+[groups]
+observer= 
+developer=feld.bauer
+
+[/]
+@observer=r
+@developer=rw
+* = 

@@ -1,0 +1,11 @@
+### This file is  authorization file for <%= @project_name %>
+# do not remove * = at [/]
+
+[groups]
+observer= 
+developer=<%= @project_admin_user %>
+
+[/]
+@observer=r
+@developer=rw
+* = 
