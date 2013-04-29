@@ -9,7 +9,7 @@ ScriptAlias /<%= @project_name %>/trac/ <%= @server_root %>/<%= @virtual_host %>
 
   AuthType Digest
   AuthName "<%= @project_realm %>"
-  AuthDigestDomain /<%= @project_name %>:<%= @server_port_ssl %> /<%= @project_name %>:<%= @server_port_nossl %>
+  AuthDigestDomain https://<%= @server_name %>/<%= @project_name %>:<%= @server_port_ssl %>
   AuthDigestProvider file
   AuthUserFile <%= @_project_auth_user_file %>
   AuthzSVNAccessFile <%= @_project_svn_authz_file %>
@@ -21,7 +21,7 @@ ScriptAlias /<%= @project_name %>/trac/ <%= @server_root %>/<%= @virtual_host %>
 <Location  /<%= @project_name %>/trac/login>
   AuthType Digest
   AuthName "<%= @project_realm %>"
-  AuthDigestDomain /<%= @project_name %>
+  AuthDigestDomain https://<%= @server_name %>/<%= @project_name %>:<%= @server_port_ssl %>
   AuthDigestProvider file
   AuthUserFile <%= @_project_auth_user_file %>
 
