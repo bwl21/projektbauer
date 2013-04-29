@@ -1,9 +1,0 @@
-generated passwords for Feldbauer-environment
-
-admin.first => <password unchanged>
-admin.second => <password unchanged>
-contributor.first => <password unchanged>
-contributor.second => <password unchanged>
-contributor.third => <password unchanged>
-observer.first => <password unchanged>
-observer.second => <password unchanged>
