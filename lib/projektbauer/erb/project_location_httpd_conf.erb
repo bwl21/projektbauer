@@ -21,7 +21,7 @@ ScriptAlias /<%= @project_name %>/trac/ <%= @server_root %>/<%= @virtual_host %>
 <Location  /<%= @project_name %>/trac/login>
   AuthType Digest
   AuthName "<%= @project_realm %>"
-  AuthDigestDomain https://<%= @server_name %>/<%= @project_name %>:<%= @server_port_ssl %>
+  AuthDigestDomain https://<%= @server_name %>:<%= @server_port_ssl %>/<%= @project_name %>
   AuthDigestProvider file
   AuthUserFile <%= @_project_auth_user_file %>
 
