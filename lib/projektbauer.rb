@@ -19,6 +19,7 @@
 #
 #
 require 'fileutils'
+require 'digest/md5'
 require 'erb'
 
 class Project
@@ -355,8 +356,7 @@ class Project
   end
 
   def _create_passwdentry(realm, user, password)
-    pwdcmd=%Q[(printf '#{user}:#{realm}:#{password}') | md5]
-    pwdhash=`#{pwdcmd}`.strip
+    pwdhash=Digest::MD5.hexdigest("#{user}:#{realm}:#{password}")
     result="#{user}:#{realm}:#{pwdhash}"
     result
   end
