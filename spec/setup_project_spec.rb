@@ -31,6 +31,10 @@ describe "it generates a svn + trac environemnt" do
 
     @p.create_all
     @p.create_all
+
+    cmd="svn ls file://\"#{@p.server_root}/#{@p.virtual_host}/#{@p.project_name}/svn\""
+    result=`#{cmd}`
+    result.should=="branches/\ntags/\ntrunk/\n"
   end
 
   it "creates the second test project" do

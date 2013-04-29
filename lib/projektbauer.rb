@@ -194,11 +194,9 @@ class Project
     nil
   end
 
+
   def create_trac
-    config <<-eos
-    # system trac-admin "#{@virtual_host}/#{@project_name}/trac initenv"
-    # fix permissions
-    eos
+    cmd = "trac-admin #{@_project_trac_dir} initenv"
   end
 
 
@@ -213,6 +211,12 @@ class Project
   def create_svn
     unless File.exists?(@_project_svn_dir + "/format")
       cmd = "svnadmin create \"#{@_project_svn_dir}\""
+      puts cmd
+      `#{cmd}`
+      initialfolders= ["tags", "branches", "trunk"]
+      cmd = ["svn mkdir",
+            initialfolders.map{|d| "file://\"#{@_project_svn_dir}\"/#{d}"},
+            "-m \"Repository created by Projektbauer\""].flatten.join(" ")
       puts cmd
       `#{cmd}`
     end
