@@ -3,9 +3,13 @@
 
 [groups]
 observer= 
-developer=<%= @project_admin_user %>
+admin=<%= @project_users[:admin].join(", ") %>
+contributor=<%= @project_users[:contributor].join(", ") %>
+observer=<%= @project_users[:observer].join(", ") %>
+
 
 [/]
+@admin=rw
+@contributor=rw
 @observer=r
-@developer=rw
 * = 

@@ -29,7 +29,7 @@ class Project
     :document_root,                 # document root within the location <apache>
     :project_name,                  # name of the project (please no spaces) \
     # used for filename
-    :project_admin_user,            # username of the project admin
+    :project_users,                 # hash of project users. Key is :admin, :observer, :contributor
     :virtual_host,                  # domain of virtual host
     :project_realm,                 # realm for the project authentification
     :virtual_host_ip,               # ip of the virtual host without port
@@ -176,9 +176,9 @@ class Project
   #
   # @return [Nil] no return
   def update_virtual_host_locations_httpd_conf
-    maintain_include_file(@_virtual_host_locations_httpd_conf,
-                          @_project_location_httpd_conf
-                          )
+    _maintain_include_file(@_virtual_host_locations_httpd_conf,
+                           @_project_location_httpd_conf
+                           )
   end
 
 
@@ -188,9 +188,9 @@ class Project
   #
   # @return [Nil] no return
   def update_include_virtual_hosts_httpd_conf
-    maintain_include_file(@_include_virtual_hosts_httpd_conf,
-                          @_project_location_httpd_conf
-                          )
+    _maintain_include_file(@_include_virtual_hosts_httpd_conf,
+                           @_project_location_httpd_conf
+                           )
     nil
   end
 
@@ -229,13 +229,48 @@ class Project
   #
   # @return [Nil] no return
   def create_htpasswd
-    unless File.exists?(@_project_auth_user_file) then
-      cmd = "htdigest -c \"#{@_project_auth_user_file}\"  \"#{@project_realm}\" #{@project_admin_user}"
-      puts cmd
-      `#{cmd}`
+
+    allusers = @project_users.map{|k,v| v}.flatten
+    pwdhashes = {}
+    passwords = {}
+    allusers.each{|user|
+      password = (0...10).map{ ('a'..'z').to_a[rand(26)] }.join
+      pwdhashes[user] = _create_passwdentry(@project_realm, user, password)
+      passwords[user] = password
+    }
+
+    if File.exists?(@_project_auth_user_file) then
+      oldcontents = File.open(@_project_auth_user_file).readlines
+      oldcontents = oldcontents.map{|i| i.strip }.sort.uniq
+
+      oldentries={}
+      oldcontents.each{|entry|
+ 
+        record = entry.split(":")
+        if pwdhashes.has_key?(record.first) then
+          pwdhashes[record.first] = entry
+          passwords[record.first] = "<password unchanged>"
+        else
+          passwords[record.first] = "<user deleted>"
+        end
+      }
     else
-      #todo: update htpasswd
+      oldcontents=[]
     end
+
+    newcontents=pwdhashes.map{|k,v| v }.sort.uniq
+    unless oldcontents==newcontents
+      File.open(@_project_auth_user_file, "w"){|f|
+        f.puts(newcontents.join("\n"))
+      }
+    end
+
+    File.open(@_project_auth_user_file+".txt", "w"){|f|
+      f.puts "generated passwords for #{@project_realm}"
+      f.puts ""
+      f.puts(passwords.map{|k,v| "#{k} => #{v}"}.sort.join("\n"))
+    }
+
   end
 
 
@@ -289,7 +324,7 @@ class Project
   #
   # @return [Nil] no return
   #
-  def maintain_include_file(include_file, entry)
+  def _maintain_include_file(include_file, entry)
     if File.exists?(include_file) then
       old = File.open(include_file).readlines.map{|i| i.strip}
       new=old.clone
@@ -313,6 +348,13 @@ class Project
   end
 
   def _update_trac_ini(file)
+  end
+
+  def _create_passwdentry(realm, user, password)
+    pwdcmd=%Q[(printf '#{user}:#{realm}:#{password}') | md5]
+    pwdhash=`#{pwdcmd}`.strip
+    result="#{user}:#{realm}:#{pwdhash}"
+    result
   end
 
 

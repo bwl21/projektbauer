@@ -3,9 +3,13 @@
 
 [groups]
 observer= 
-developer=feld.bauer
+admin=admin.first, admin.second
+contributor=contributor.first, contributor.second, contributor.third
+observer=observer.first, observer.second
+
 
 [/]
+@admin=rw
+@contributor=rw
 @observer=r
-@developer=rw
 * = 

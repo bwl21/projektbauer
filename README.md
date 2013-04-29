@@ -68,9 +68,13 @@ In order to use **Projektbauer** you need to create a configuration file
 
 	p=Project.new
 	p.project_name = "{name of the project}"
-	p.project_admin_user = "{username for the projet admin}"
+    p.project_users = {
+      admin: ["admin.first", "admin.second"],
+      observer: ["observer.first", "observer.second"],
+      contributor: ["contributor.first", "contributor.second"]
+    }
 	p.virtual_host  = "{server internal folder name of the virtual host,}"
-	p.project_realm   = "Weichel21-Entwicklungen"
+	p.project_realm   = "{realm for authorization, no spaces, no colons!}"
 	p.server_root = "{path to top level project folder on the server}"
 	p.virtual_host_ip = "{url of virtual host without port}"
 	p.server_name = "{domain of the virtual host}"
@@ -80,7 +84,14 @@ In order to use **Projektbauer** you need to create a configuration file
 
 	p.create_all
 
-For more details refer to the yard documentation included
+For more details refer to the yard documentation included.
+
+Note that you can run it repeatedly. Thereby
+
+-   new users are created
+-   old users are removed
+
+you can see this in the project folder, in file `{project_realm}.htdigest.txt`
 
 ## Contributing
 

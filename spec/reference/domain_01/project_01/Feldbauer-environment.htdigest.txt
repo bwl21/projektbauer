@@ -1,0 +1,11 @@
+generated passwords for Feldbauer-environment
+
+admin.first => <password unchanged>
+admin.othersecond => jhafvmdmpi
+admin.second => <user deleted>
+contributor.first => <password unchanged>
+contributor.second => <password unchanged>
+contributor.third => <password unchanged>
+observer.first => <password unchanged>
+observer.second => <password unchanged>
+observer.third => uhmrqcqfal

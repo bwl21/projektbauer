@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "yard"
   spec.add_development_dependency "redcarpet"
   spec.add_development_dependency "wortsammler"
+  spec.add_development_dependency "pry"
 end
