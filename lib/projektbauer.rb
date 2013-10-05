@@ -35,8 +35,22 @@ class Project
     :project_realm,                 # realm for the project authentification
     :virtual_host_ip,               # ip of the virtual host without port
     :server_port_nossl,             # port for the no ssl access of the virtual host (e.g. 8080)
-    :server_port_ssl                # port of ssel access to the virtual host (e.g. 443)
+    :server_port_ssl,               # port of ssel access to the virtual host (e.g. 443)
+    # used to find the right trac tools
+    :trac_admin,                    # allows the name of trac-admin (used for virtualenv) 
 
+    ### smtp configuration for trac
+    :smtp_default_domain,           # Default dopmain for smtp
+    :smtp_enabled,                  # allow trac to send smtp
+    :smtp_from,                     # sender adress
+    :smtp_from_author,              # not supported defaults to false
+    :smtp_from_name,                # name of sender adress
+    :smtp_user,                     # username for smtp
+    :smtp_password,                 # password for smtp
+    :smtp_port,                     # port for smtp 
+    :smtp_replyto,                  # reply-to adress
+    :smtp_server,                   # smtp-server
+    :smtp_subject_prefix            # prefix for subject = __default__
 
 
 
@@ -56,6 +70,9 @@ class Project
     @project_realm       = nil  # realm for authorization
     @project_admin_user  = nil  # admin - user
     @server_admin        = nil  # email of server admin
+    @smtp_enabled        = false # email is not supported by default
+
+    @trac_admin          = "trac-admin"  # the command to trac-admin
 
   end
 
@@ -83,7 +100,8 @@ class Project
     @_project_svn_authz_file              = "#{@_project_home}/#{@project_name}.dav_svn_authz"
     @_document_root_dir                   = "#{@_virtual_host_home_dir}/www"
     @_index_html_file                     = "#{@_document_root_dir}/index.html"
-
+    @_trac_admin                          = "#{@trac_admin}"
+    @_trac_ini_file                       = "#{@_project_trac_dir}/conf/trac.ini"
     nil
   end
 
@@ -196,8 +214,45 @@ class Project
   end
 
 
+
+  #
+  # This creates the trac environment
+  #
+  # @return [type] [description]
   def create_trac
-    cmd = "trac-admin #{@_project_trac_dir} initenv"
+    quoted_project_trac_dir = "\"#{@_project_trac_dir}\""
+
+    unless File.exists?("#{@_project_trac_dir}/conf")
+      FileUtils.mkdir_p(@_project_trac_dir)
+      _trac_admin "#{quoted_project_trac_dir} initenv \"#{@project_name}\" sqlite:\"#{@_project_trac_dir}/db/trac.db\""
+      File.rm(@_trac_ini_file)  # remove this such that it gets regenerated
+    end
+
+    _update_trac_ini
+
+    # create group for project.admins
+    _trac_admin "#{quoted_project_trac_dir} permission add project.admins TRAC_ADMIN TICKET_ADMIN WIKI_ADMIN"
+
+
+    @project_users[:admin].each{|u|
+      _trac_admin "#{quoted_project_trac_dir} permission add #{u} project.admins"
+    }
+    _trac_admin "#{quoted_project_trac_dir} permission add project.contributors TRAC_ADMIN TICKET_ADMIN WIKI_ADMIN"
+    anonymous_revoke="BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW MILESTONE_VIEW REPORT_SQL_VIEW"
+    anonymous_revoke <<" REPORT_VIEW ROADMAP_VIEW SEARCH_VIEW TICKET_VIEW TIMELINE_VIEW WIKI_VIEW"
+
+    _trac_admin "#{quoted_project_trac_dir} permission remove anonymous #{anonymous_revoke}"
+    _trac_admin "#{quoted_project_trac_dir} permission add authenticated #{anonymous_revoke}"
+
+    # crate include-file for webserver
+    #
+    _trac_admin "#{quoted_project_trac_dir} deploy #{quoted_project_trac_dir}"
+
+    # link to the svn repository
+    # 
+    _trac_admin "#{quoted_project_trac_dir} repository add \"(default)\" \"#{@_project_svn_dir}\" svn"
+
+    _create_post_commit
   end
 
 
@@ -216,18 +271,12 @@ class Project
       `#{cmd}`
       initialfolders= ["tags", "branches", "trunk"]
       cmd = ["svn mkdir",
-            initialfolders.map{|d| "file://\"#{@_project_svn_dir}\"/#{d}"},
-            "-m \"Repository created by Projektbauer\""].flatten.join(" ")
+             initialfolders.map{|d| "file://\"#{@_project_svn_dir}\"/#{d}"},
+             "-m \"Repository created by Projektbauer\""].flatten.join(" ")
       puts cmd
       `#{cmd}`
     end
   end
-
-
-  def connect_svn_trac
-
-  end
-
 
   #
   # This creates the htdigest file
@@ -250,7 +299,7 @@ class Project
 
       oldentries={}
       oldcontents.each{|entry|
- 
+
         record = entry.split(":")
         if pwdhashes.has_key?(record.first) then
           pwdhashes[record.first] = entry
@@ -270,7 +319,7 @@ class Project
       }
     end
 
-    File.open(@_project_auth_user_file+".txt", "w"){|f|
+    File.open(@_project_auth_user_file+".txt", "a"){|f|
       f.puts "generated passwords for #{@project_realm}"
       f.puts ""
       f.puts(passwords.map{|k,v| "#{k} => #{v}"}.sort.join("\n"))
@@ -299,6 +348,8 @@ class Project
     create_htpasswd
     create_svn_authz_file
     create_svn
+
+    create_trac
   end
 
 
@@ -349,12 +400,48 @@ class Project
     nil
   end
 
-  def _create_post_commit(file)
+
+ 
+  # 
+  # This creates the post commit hook file
+  # 
+  # @param  file [type] [description]
+  # 
+  # @return [type] [description]
+  def _create_post_commit()
+    post_commit_file="#{@_project_svn_dir}/hooks/post-commit"
+    trac_ini = expand_erb("post-commit.erb")
+      File.open(post_commit_file, "w") {|f|
+        f.puts trac_ini
+      }
+    cmd="chmod +777 \"#{post_commit_file}\""
+    `#{cmd}`
   end
 
-  def _update_trac_ini(file)
+
+  #
+  # This updates (actually rewrites) trac.ini
+  #
+  # @return [Nil]
+  def _update_trac_ini()
+    trac_ini = expand_erb("trac.ini.erb")
+    unless File.exists?(@_trac_ini_file)
+      File.open(@_trac_ini_file, "w") {|f|
+        f.puts trac_ini
+      }
+    end
   end
 
+
+
+  #
+  # Creates on e particular password entry
+  #
+  # @param  realm [String] Realm for the password
+  # @param  user [String] username
+  # @param  password [String] password
+  #
+  # @return [type] [description]
   def _create_passwdentry(realm, user, password)
     pwdhash=Digest::MD5.hexdigest("#{user}:#{realm}:#{password}")
     result="#{user}:#{realm}:#{pwdhash}"
@@ -362,16 +449,16 @@ class Project
   end
 
 
-  def _set_trac_permissions
+  #
+  # This performs tracadmin commands
+  # @param  cmd [STring] the arguments to trac-admin
+  #
+  # @return [String] [description]
+  def _trac_admin(command)
 
-    ## assigning permissions
-
-    #see <http://trac.edgewall.org/wiki/TracPermissions>
-
-    #/trac-admin bwl_trac/ permission add <user> TRAC_ADMIN
-
-    #**note**: Ensure the appropriate permissions in admin, in particular be careful about the rights of "anonymous"
-
+    cmd= "#{@trac_admin} #{command}"
+    puts cmd
+    `#{cmd}`
   end
 
 end

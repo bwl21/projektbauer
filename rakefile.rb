@@ -17,5 +17,6 @@ end
 CLEAN << "spec/tmp_output"
 
 task :default do
+	require 'pry';binding.pry
  sh "rake -T"
 end
