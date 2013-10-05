@@ -225,7 +225,7 @@ class Project
     unless File.exists?("#{@_project_trac_dir}/conf")
       FileUtils.mkdir_p(@_project_trac_dir)
       _trac_admin "#{quoted_project_trac_dir} initenv \"#{@project_name}\" sqlite:\"#{@_project_trac_dir}/db/trac.db\""
-      File.rm(@_trac_ini_file)  # remove this such that it gets regenerated
+      FileUtils.rm(@_trac_ini_file)  # remove this such that it gets regenerated
     end
 
     _update_trac_ini
@@ -248,6 +248,8 @@ class Project
     #
     _trac_admin "#{quoted_project_trac_dir} deploy #{quoted_project_trac_dir}"
 
+    cmd = "chmod +x #{@_project_trac_dir}/cgi-bin/*"
+    `#{cmd}`
     # link to the svn repository
     # 
     _trac_admin "#{quoted_project_trac_dir} repository add \"(default)\" \"#{@_project_svn_dir}\" svn"
@@ -414,8 +416,8 @@ class Project
       File.open(post_commit_file, "w") {|f|
         f.puts trac_ini
       }
-    cmd="chmod +777 \"#{post_commit_file}\""
-    `#{cmd}`
+    cmd="chmod +x \"#{post_commit_file}\""
+    #{cmd}`
   end
 
 
