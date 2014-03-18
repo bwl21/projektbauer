@@ -1,3 +1,4 @@
+require "bundler/gem_tasks"
 require 'rspec/core/rake_task'
 require 'rake/clean'
 
@@ -9,7 +10,7 @@ RSpec::Core::RakeTask.new do |t|
 end
 
 
-desc "document (yard) all AUTOSAR ruby helpers defined here"
+desc "document (yard) helpers defined here"
 task :doc do
    sh "yard  --markup markdown doc . "
 end
@@ -17,6 +18,5 @@ end
 CLEAN << "spec/tmp_output"
 
 task :default do
-	require 'pry';binding.pry
  sh "rake -T"
 end

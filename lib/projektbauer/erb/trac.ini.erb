@@ -140,62 +140,62 @@ restrict_owner = false
 workflow = ConfigurableTicketWorkflow
 
 [ticket-workflow]
-accept = new,assigned,accepted,reopened -> accepted
+accept = new,assigned -> assigned
 accept.operations = set_owner_to_self
 accept.permissions = TICKET_MODIFY
-deploy = to_be_deployed -> deployed
-deploy.name = release
-deploy.operations = set_owner, set_resolution
-deploy.permissions = TICKET_MODIFY
-deployed_close = deployed -> closed
-deployed_close.name = release
-deployed_close.operations = set_owner, set_resolution
-deployed_close.permissions = TICKET_MODIFY
+
 leave = * -> *
 leave.default = 1
 leave.operations = leave_status
-reassign = new,assigned,accepted,reopened -> assigned
+
+reassign = new -> new
 reassign.operations = set_owner
 reassign.permissions = TICKET_MODIFY
-reassignreview = to_be_verified -> to_be_verified
-reassignreview.name = reassign
-reassignreview.operations = set_owner
-reassignreview.permissions = TICKET_MODIFY
-reject = to_be_verified -> reopened
-reject.name = failed, return
-reject.operations = set_owner
-reject.permissions = TICKET_MODIFY
-reopen = closed,deployed,to_be_deployed -> reopened
-reopen.operations = del_resolution
+
+reassignAssigned = assigned -> assigned
+reassignAssigned.name = reassign
+reassignAssigned.operations = set_owner
+reassignAssigned.permissions = TICKET_MODIFY
+
+reassignReopen = reopened -> reopened
+reassignReopen.name = reassign
+reassignReopen.operations = set_owner
+reassignReopen.permissions = TICKET_MODIFY
+
+
+reassignReview =  to_be_verified -> to_be_verified
+reassignReview.name = reassign
+reassignReview.operations = set_owner
+reassignReview.permissions = TICKET_MODIFY
+
+reopen = closed,to_be_deployed -> reopened
+reopen.operations = set_owner,del_resolution
 reopen.permissions = TICKET_CREATE
-resolve = new,assigned,accepted,reopened,to_be_verified -> closed
+
+resolve = new,assigned,reopened,to_be_verified -> closed
 resolve.operations = set_resolution
 resolve.permissions = TICKET_MODIFY
-review = accepted -> to_be_verified
-review.name = review
+
+review = new, reopened, assigned -> to_be_verified
+review.name = review   
 review.operations = set_owner
 review.permissions = TICKET_MODIFY
+
+reject = to_be_verified -> reopened
+reject.name = reopen
+reject.operations = set_owner
+reject.permissions = TICKET_MODIFY
+
 review_deploy = to_be_verified -> to_be_deployed
 review_deploy.name = deploy
 review_deploy.operations = set_owner
 review_deploy.permissions = TICKET_MODIFY
 
-[ticket-workflowx]
-accept = new,assigned,accepted,reopened -> accepted
-accept.operations = set_owner_to_self
-accept.permissions = TICKET_MODIFY
-leave = * -> *
-leave.default = 1
-leave.operations = leave_status
-reassign = new,assigned,accepted,reopened -> assigned
-reassign.operations = set_owner
-reassign.permissions = TICKET_MODIFY
-reopen = closed -> reopened
-reopen.operations = del_resolution
-reopen.permissions = TICKET_CREATE
-resolve = new,assigned,accepted,reopened -> closed
-resolve.operations = set_resolution
-resolve.permissions = TICKET_MODIFY
+deploy = to_be_deployed -> closed
+deploy.name = release
+deploy.operations = set_owner, set_resolution
+deploy.permissions = TICKET_MODIFY
+
 
 [timeline]
 abbreviated_messages = True

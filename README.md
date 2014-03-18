@@ -62,7 +62,8 @@ Or install it yourself as:
 
 ## Usage
 
-In order to use **Projektbauer** you need to create a configuration file
+In order to use **Projektbauer** you need to create a configuration file 
+which is in fact a ruby program.
 
 	require './lib/projektbauer.rb'
 
@@ -81,6 +82,21 @@ In order to use **Projektbauer** you need to create a configuration file
 	p.server_admin = "{email adress}"
 	p.server_port_nossl = 8080
 	p.server_port_ssl = 443
+
+    # this is required for the trac configuration
+
+    p.smtp_default_domain = "foo.bar.de"              # Default dopmain for smtp
+    p.smtp_enabled = true                             # allow trac to send smtp
+    p.smtp_from = "projektbauer@foo.bar.de"           # sender adress
+    p.smtp_from_author = false                        # not supported defaults to false
+    p.smtp_from_name = "Projekt bauer at foo bar de"  # name of sender adress
+    p.smtp_user = "sample.user.smtp"                  # username for smtp
+    p.smtp_password = "sample.password.smtp"          # password for smtp
+    p.smtp_port = 25                                  # port for smtp 
+    p.smtp_replyto = "projetkbauer.trac.replyto@#{@p.server_name}" # reply-to adress
+    p.smtp_server = @p.server_name                    # smtp-server
+    p.smtp_subject_prefix = "__default__"             # prefix for subject = __default__
+
 
 	p.create_all
 
