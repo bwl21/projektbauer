@@ -1,3 +1,7 @@
+# this project is no longer maintained
+
+As we all now use git, containers and all that stuff, this project is no longer maintained.
+
 # Projektbauer
 
 Projektbauer (a german play on words which could be translated to
